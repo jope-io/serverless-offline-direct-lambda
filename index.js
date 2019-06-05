@@ -3,7 +3,7 @@
 const packagePath = 'node_modules/serverless-offline-direct-lambda';
 const handlerPath = `proxy.js`;
 
-var AWS_SDK_USED = process.env.AWS_SDK_USED || 'rails';
+var AWS_SDK_USED = process.env.AWS_SDK_USED || 'node';
 function AWS_SDK_METHOD(functionBeingProxied, location) {
 
     if(AWS_SDK_USED == 'node') {
@@ -20,7 +20,7 @@ function AWS_SDK_METHOD(functionBeingProxied, location) {
                 // NB: AWS SDK for NodeJS specifies as 'binary/octet-stream' not 'application/json'
                 'binary/octet-stream': JSON.stringify(
                   {
-                    location,   
+                    location,
                     body: "$input.body",
                     targetHandler :  functionBeingProxied.handler,
                   }
@@ -50,7 +50,7 @@ function AWS_SDK_METHOD(functionBeingProxied, location) {
                 // NB: AWS SDK for NodeJS specifies as 'binary/octet-stream' not 'application/json'
                 'application/json': JSON.stringify(
                   {
-                    location,   
+                    location,
                     body: "$input.json('$')",
                     targetHandler :  functionBeingProxied.handler,
                   }
@@ -94,14 +94,10 @@ class ServerlessPlugin {
 
 const addProxies = (functionsObject, location) => {
   Object.keys(functionsObject).forEach(fn => {
-
-    // filter out functions with event config,
-    // leaving just those intended for direct lambda-to-lambda invocation
     const functionObject = functionsObject[fn];
-    if (!functionObject.events || functionObject.events.length === 0) {
-      const pf = functionProxy(functionObject, location);
-      functionsObject[pf.name] = pf;
-    }
+
+    const pf = functionProxy(functionObject, location);
+    functionsObject[pf.name] = pf;
   });
 };
 
@@ -132,7 +128,7 @@ const functionProxy = (functionBeingProxied, location) => ({
         }
       }
     },
- 
+
     // See methods above for further details
     AWS_SDK_METHOD(functionBeingProxied, location)
 
